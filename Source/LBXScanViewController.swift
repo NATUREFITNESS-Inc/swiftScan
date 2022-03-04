@@ -42,6 +42,10 @@ open class LBXScanViewController: UIViewController {
 
     // 是否需要识别后的当前图像
     public var isNeedCodeImage = false
+    
+    // auto start
+    open var autoStart = true
+    open var scanning = false
 
     // 相机启动提示文字
     public var readyString: String! = "loading"
@@ -68,10 +72,10 @@ open class LBXScanViewController: UIViewController {
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         drawScanView()
-        perform(#selector(LBXScanViewController.startScan), with: nil, afterDelay: 0.3)
+        perform(#selector(LBXScanViewController.initScanner), with: nil, afterDelay: 0.3)
     }
 
-    @objc open func startScan() {
+    @objc open func initScanner() {
         if scanObj == nil {
             var cropRect = CGRect.zero
             if isOpenInterestRect {
@@ -106,11 +110,59 @@ open class LBXScanViewController: UIViewController {
         // 结束相机等待提示
         qRScanView?.deviceStopReadying()
 
+        if (autoStart) {
+            // 开始扫描动画
+            qRScanView?.startScanAnimation()
+            
+            // 相机运行
+            scanObj?.start()
+            
+            scanning = true
+        }
+    }
+    
+    @objc open func startScan() {
+        if scanObj == nil {
+            var cropRect = CGRect.zero
+            if isOpenInterestRect {
+                cropRect = LBXScanView.getScanRectWithPreView(preView: view, style: scanStyle!)
+            }
+
+            // 指定识别几种码
+            if arrayCodeType == nil {
+                arrayCodeType = [AVMetadataObject.ObjectType.qr as NSString,
+                                 AVMetadataObject.ObjectType.ean13 as NSString,
+                                 AVMetadataObject.ObjectType.code128 as NSString] as [AVMetadataObject.ObjectType]
+            }
+
+            scanObj = LBXScanWrapper(videoPreView: view,
+                                     objType: arrayCodeType!,
+                                     isCaptureImg: isNeedCodeImage,
+                                     cropRect: cropRect,
+                                     success: { [weak self] (arrayResult) -> Void in
+                                        guard let strongSelf = self else {
+                                            return
+                                        }
+                                        if !strongSelf.isSupportContinuous {
+                                            // 停止扫描动画
+                                            strongSelf.qRScanView?.stopScanAnimation()
+                                        }
+                                        strongSelf.handleCodeResult(arrayResult: arrayResult)
+                                     })
+        }
+        
+        scanObj?.supportContinuous = isSupportContinuous;
+
+        // 结束相机等待提示
+        qRScanView?.deviceStopReadying()
+        
         // 开始扫描动画
         qRScanView?.startScanAnimation()
-
+        
         // 相机运行
         scanObj?.start()
+        
+        scanning = true
     }
     
     open func drawScanView() {
@@ -127,13 +179,14 @@ open class LBXScanViewController: UIViewController {
      处理扫码结果，如果是继承本控制器的，可以重写该方法,作出相应地处理，或者设置delegate作出相应处理
      */
     open func handleCodeResult(arrayResult: [LBXScanResult]) {
+        scanning = false
+        
         guard let delegate = scanResultDelegate else {
             fatalError("you must set scanResultDelegate or override this method without super keyword")
         }
         
         if !isSupportContinuous {
             navigationController?.popViewController(animated: true)
-
         }
         
         if let result = arrayResult.first {
