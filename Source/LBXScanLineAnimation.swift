@@ -21,7 +21,7 @@ class LBXScanLineAnimation: UIImageView {
         isHidden = false
         isAnimationing = true
         if image != nil {
-            stepAnimation()
+            downAnimation()
         }
     }
     
@@ -35,7 +35,6 @@ class LBXScanLineAnimation: UIImageView {
         frame.origin.y -= hImg
         frame.size.height = hImg
         self.frame = frame
-        alpha = 0.0
 
         UIView.animate(withDuration: 1.4, animations: {
             self.alpha = 1.0
@@ -46,6 +45,43 @@ class LBXScanLineAnimation: UIImageView {
             self.frame = frame
         }, completion: { _ in
             self.perform(#selector(LBXScanLineAnimation.stepAnimation), with: nil, afterDelay: 0.3)
+        })
+    }
+    
+    @objc func downAnimation() {
+        guard isAnimationing else {
+            return
+        }
+        var frame = animationRect
+        let hImg = image!.size.height * animationRect.size.width / image!.size.width
+
+        frame.size.height = hImg
+        self.frame = frame
+
+        UIView.animate(withDuration: 1.4, animations: {
+            var frame = self.animationRect
+            let hImg = self.image!.size.height * self.animationRect.size.width / self.image!.size.width
+            frame.origin.y += (frame.size.height - hImg)
+            frame.size.height = hImg
+            self.frame = frame
+        }, completion: { _ in
+            self.perform(#selector(LBXScanLineAnimation.upAnimation), with: nil, afterDelay: 0.3)
+        })
+    }
+    
+    @objc func upAnimation() {
+        guard isAnimationing else {
+            return
+        }
+
+        UIView.animate(withDuration: 1.4, animations: {
+            var frame = self.animationRect
+            let hImg = self.image!.size.height * self.animationRect.size.width / self.image!.size.width
+
+            frame.size.height = hImg
+            self.frame = frame
+        }, completion: { _ in
+            self.perform(#selector(LBXScanLineAnimation.downAnimation), with: nil, afterDelay: 0.3)
         })
     }
     
