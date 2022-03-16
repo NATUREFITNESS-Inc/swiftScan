@@ -15,6 +15,7 @@ public protocol LBXScanViewControllerDelegate: class {
 }
 
 public protocol QRRectDelegate {
+    func scanView() -> UIView
     func drawwed()
 }
 
@@ -56,7 +57,7 @@ open class LBXScanViewController: UIViewController {
         // Do any additional setup after loading the view.
 
         // [self.view addSubview:_qRScanView];
-        view.backgroundColor = UIColor.black
+        self.currentScanView().backgroundColor = UIColor.black
         edgesForExtendedLayout = UIRectEdge(rawValue: 0)
     }
 
@@ -79,7 +80,7 @@ open class LBXScanViewController: UIViewController {
         if scanObj == nil {
             var cropRect = CGRect.zero
             if isOpenInterestRect {
-                cropRect = LBXScanView.getScanRectWithPreView(preView: view, style: scanStyle!)
+                cropRect = LBXScanView.getScanRectWithPreView(preView: self.currentScanView(), style: scanStyle!)
             }
 
             // 指定识别几种码
@@ -89,7 +90,7 @@ open class LBXScanViewController: UIViewController {
                                  AVMetadataObject.ObjectType.code128 as NSString] as [AVMetadataObject.ObjectType]
             }
 
-            scanObj = LBXScanWrapper(videoPreView: view,
+            scanObj = LBXScanWrapper(videoPreView: self.currentScanView(),
                                      objType: arrayCodeType!,
                                      isCaptureImg: isNeedCodeImage,
                                      cropRect: cropRect,
@@ -125,7 +126,7 @@ open class LBXScanViewController: UIViewController {
         if scanObj == nil {
             var cropRect = CGRect.zero
             if isOpenInterestRect {
-                cropRect = LBXScanView.getScanRectWithPreView(preView: view, style: scanStyle!)
+                cropRect = LBXScanView.getScanRectWithPreView(preView: self.currentScanView(), style: scanStyle!)
             }
 
             // 指定识别几种码
@@ -135,7 +136,7 @@ open class LBXScanViewController: UIViewController {
                                  AVMetadataObject.ObjectType.code128 as NSString] as [AVMetadataObject.ObjectType]
             }
 
-            scanObj = LBXScanWrapper(videoPreView: view,
+            scanObj = LBXScanWrapper(videoPreView: self.currentScanView(),
                                      objType: arrayCodeType!,
                                      isCaptureImg: isNeedCodeImage,
                                      cropRect: cropRect,
@@ -167,8 +168,9 @@ open class LBXScanViewController: UIViewController {
     
     open func drawScanView() {
         if qRScanView == nil {
-            qRScanView = LBXScanView(frame: view.frame, vstyle: scanStyle!)
-            view.addSubview(qRScanView!)
+            let myScanView = self.currentScanView()
+            qRScanView = LBXScanView(frame: myScanView.frame, vstyle: scanStyle!)
+            myScanView.addSubview(qRScanView!)
             delegate?.drawwed()
         }
         qRScanView?.deviceStartReadying(readyStr: readyString)
@@ -211,6 +213,10 @@ open class LBXScanViewController: UIViewController {
             picker.allowsEditing = true
             self?.present(picker, animated: true, completion: nil)
         }
+    }
+    
+    func currentScanView() -> UIView {
+        return delegate?.scanView() ?? self.view
     }
 }
 
