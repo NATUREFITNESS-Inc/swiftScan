@@ -8,14 +8,7 @@
 
 import UIKit
 
-class QQScanViewController: LBXScanViewController, QRRectDelegate {
-    func scanView() -> UIView {
-        return self.tmpScanView ?? self.view
-    }
-    
-    func drawwed() {
-        
-    }
+class QQScanViewController: LBXScanViewController {
 
     /**
     @brief  扫码区域上方提示文字
@@ -28,7 +21,6 @@ class QQScanViewController: LBXScanViewController, QRRectDelegate {
     var isOpenedFlash: Bool = false
 
 // MARK: - 底部几个功能：开启闪光灯、相册、我的二维码
-    var tmpScanView: UIView?
 
     //底部显示的功能项
     var bottomItemsView: UIView?
@@ -52,18 +44,12 @@ class QQScanViewController: LBXScanViewController, QRRectDelegate {
         scanStyle?.centerUpOffset += 10
 
         // Do any additional setup after loading the view.
-        if (self.tmpScanView == nil) {
-            self.tmpScanView = UIView(frame: CGRect(x: 50.0, y: 50, width: self.view.frame.size.width - 100, height: self.view.frame.size.width ) )
-            self.view.addSubview(self.tmpScanView!)
-        }
-        
-        self.delegate = self
     }
 
     override func viewDidAppear(_ animated: Bool) {
 
         super.viewDidAppear(animated)
-        
+
         drawBottomItems()
     }
 
